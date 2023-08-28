@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+      integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div class="nav">
+      <div class="container d-flex">
+        <div class="Logo d-flex">
+          <h3>Live Chat</h3>
+        </div>
+        <div class="links space-between">
+          <ul class="d-flex space-between">
+            <li><a href=""> Home</a></li>
+            <li><a href="">Groups</a></li>
+            <li>
+              <a href="">NewMessages</a>
+              <span id="Alert" data-Msg=""></span>
+              <i class="fa fa-1x fa-bell fa-solid"></i>
+            </li>
+            <li>
+              <button>Login</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="PublicChat">
+      <div class="container">
+        <div class="topHead">
+          <div class="col">
+            <button>Button</button>
+          </div>
+          <div class="col">
+            <button>Button</button>
+          </div>
+          <div class="col">
+            <button>Button</button>
+          </div>
+        </div>
+        <pre
+          id="messages"
+          style="height: 400px; overflow: scroll"
+          class="centerBody"
+        ></pre>
+        <div class="bottomBody">
+          <div class="Message">
+            <input type="text" placeholder="Enter Massage .." id="messageBox" />
+            <a id="send">
+              <i class="fa-brands fa-2x fa-telegram"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="container">
+        <div class="All">
+          <span>All Right Is Resived&copy;</span>
+          <span>Created By Mohamed Ahmed</span>
+        </div>
+      </div>
+    </div>
+    <!-- <script>
+      function Show() {
+        document.getElementById("xx").style.display = "block";
+
+        document.getElementById("ma").remove();
+      }
+    </script> -->
+    <script>
+      // function Show() {
+      //   document.getElementById("xx").style.display = "block";
+
+      //   document.getElementById("ma").remove();
+      // }
+      (function () {
+        const sendBtn = document.getElementById("send");
+        const messages = document.getElementById("messages");
+        const messageBox = document.querySelector("#messageBox");
+
+        var reader;
+        var row = ``;
+        let ws;
+
+        var IsResver = false;
+        function showMessage(message, IsResver = false) {
+          let date = new Date();
+
+          let hours = date.getHours();
+          let minutes = date.getMinutes();
+
+          // Check whether AM or PM
+          let newformat = hours >= 12 ? "PM" : "AM";
+
+          // Find current hour in AM-PM Format
+          hours = hours % 12;
+
+          // To display "0" as "12"
+          hours = hours ? hours : 12;
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+
+          var realTime = hours + ":" + minutes + " " + newformat;
+          if (IsResver) {
+            row = `<div style=" width: 100%;
+          height: 350px;
+          display: flex;
+          justify-content: end;  align-items:end;">
+                        <span>${message} &nbsp;&nbsp;<sub><small>${realTime}</small></sub></span>
+                        </div>
+  
+                `;
+            IsResver = false;
+          } else {
+            row = `<div style=" width: 100%;
+          height: 350px;
+          display: flex;
+          justify-content: start;  align-items:start;">
+                        <span>${message} &nbsp;&nbsp;<sub><small>${realTime}</small></sub></span>
+                        </div>
+  
+                `;
+          }
+
+          messages.innerHTML += row;
+          messages.scrollTop = messages.scrollHeight;
+          messageBox.value = "";
+        }
+
+        function init() {
+          if (ws) {
+            ws.onerror = ws.onopen = ws.onclose = null;
+            ws.close();
+          }
+
+          ws = new WebSocket("ws://localhost:6969");
+          ws.onopen = () => {
+            console.log("Connection opened!");
+          };
+          ws.addEventListener("message", (event) => {
+            if (event.data instanceof Blob) {
+              reader = new FileReader();
+
+              reader.onload = () => {
+                console.log("Result: " + reader.result);
+                IsResver = true;
+                showMessage(reader.result, IsResver);
+              };
+              reader.readAsText(event.data);
+            } else {
+              console.log("Result: " + event.data);
+            }
+          });
+          ws.onclose = function () {
+            ws = null;
+          };
+        }
+
+        sendBtn.onclick = function () {
+          if (!ws) {
+            showMessage("No WebSocket connection :(");
+            return;
+          }
+
+          ws.send(messageBox.value);
+          showMessage(messageBox.value);
+        };
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
