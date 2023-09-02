@@ -13,7 +13,9 @@
     />
     <link rel="stylesheet" href="css/main.css" />
   </head>
-  <body>
+  <body id="bdy">
+    <input type="hidden" value="" id="UserSessionId" />
+    <input type="hidden" value="" id="UserName" />
     <div class="nav">
       <div class="container d-flex">
         <div class="Logo d-flex">
@@ -35,18 +37,27 @@
         </div>
       </div>
     </div>
-
+    <div style="width: 50%; margin: 20px auto">
+      <center>
+        <input
+          type="text"
+          placeholder="Name"
+          style="padding: 10px; border-radius: 10px"
+        />
+        <button id="join" style="padding: 5px; width: 40px">Join</button>
+      </center>
+    </div>
     <div class="PublicChat">
       <div class="container">
         <div class="topHead">
           <div class="col">
-            <button>Button</button>
+            <button class="btns" data-value="Live">Button</button>
           </div>
           <div class="col">
-            <button>Button</button>
+            <button class="btns" data-value="Chat">Button</button>
           </div>
           <div class="col">
-            <button>Button</button>
+            <button class="btns" data-value="Now!">Button</button>
           </div>
         </div>
         <pre
@@ -57,9 +68,7 @@
         <div class="bottomBody">
           <div class="Message">
             <input type="text" placeholder="Enter Massage .." id="messageBox" />
-            <a id="send">
-              <i class="fa-brands fa-2x fa-telegram"></i>
-            </a>
+            <a id="send" class="btn"> Send </a>
           </div>
         </div>
       </div>
@@ -89,13 +98,24 @@
         const sendBtn = document.getElementById("send");
         const messages = document.getElementById("messages");
         const messageBox = document.querySelector("#messageBox");
+        const UserB = document.querySelector("center input");
+        const joinbtn = document.querySelector("center button");
+        //Random Color
+        var RandomNum = Math.floor(Math.random() * 999);
+
+        //Add UserSessionId
+
+        document.getElementById("UserSessionId").value = `U-${RandomNum}`;
+        var UserId = document.getElementById("UserSessionId").value;
+        var arrMsg = [];
 
         var reader;
         var row = ``;
         let ws;
 
         var IsResver = false;
-        function showMessage(message, IsResver = false) {
+
+        function GetRealTime() {
           let date = new Date();
 
           let hours = date.getHours();
@@ -112,30 +132,99 @@
           minutes = minutes < 10 ? "0" + minutes : minutes;
 
           var realTime = hours + ":" + minutes + " " + newformat;
+          return realTime;
+        }
+        bdy.onload = () => {
+          if (UserId !== "") {
+            IsResver = true;
+            messages.innerHTML = "";
+            if (localStorage.getItem("Sender") != null) {
+              Sender();
+            }
+            if (IsResver) {
+              Resver();
+            }
+          }
+
+          joinbtn.onclick = () => {
+            if (UserB.value == "") {
+              alert("Should Add Name");
+            }
+          };
+        };
+
+        function Resver() {
+          var row = ``;
+
+          var ResiverMsg = JSON.parse(localStorage.getItem("Resver"));
+          console.log(ResiverMsg.sort());
+          for (let index = 0; index < ResiverMsg.length; index++) {
+            row += `<div style=" width: 100%;
+                height: 350px;
+                display: flex;
+                justify-content: end;  align-items:end;">
+                              <span style="background-color:#${RandomNum} ;"><a >${ResiverMsg[index].Name}</a>${ResiverMsg[index].Message} &nbsp;&nbsp;<sub><small>${ResiverMsg[index].Time}</small></sub></span>
+                              </div>
+
+                      `;
+          }
+          messages.innerHTML += row;
+          messages.scrollTop = messages.scrollHeight;
+          row = ``;
+        }
+
+        function Sender() {
+          var row = ``;
+          var SenderMsg = JSON.parse(localStorage.getItem("Sender"));
+          console.log(SenderMsg);
+          for (let index = 0; index < SenderMsg.length; index++) {
+            row += `<div style=" width: 100%;
+                height: 350px;
+                display: flex;
+                justify-content: start;  align-items:start;">
+                              <span><a >${SenderMsg[index].Name}</a><br/>${SenderMsg[index].Message} &nbsp;&nbsp;<sub><small>${SenderMsg[index].Time}</small></sub></span>
+                              </div>
+
+
+
+                      `;
+          }
+          messages.innerHTML += row;
+          messages.scrollTop = messages.scrollHeight;
+          row = ``;
+        }
+
+        function showMessage(message, IsResver = false, Name = "Anonymus") {
           if (IsResver) {
             row = `<div style=" width: 100%;
-          height: 350px;
-          display: flex;
-          justify-content: end;  align-items:end;">
-                        <span>${message} &nbsp;&nbsp;<sub><small>${realTime}</small></sub></span>
-                        </div>
-  
-                `;
+                height: 350px;
+                display: flex;
+                justify-content: end;  align-items:end;">
+                              <span style="background-color:#${RandomNum} ;"> <a >${Name}</a><br/> ${message} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
+                              </div>
+
+                      `;
+
             IsResver = false;
           } else {
             row = `<div style=" width: 100%;
-          height: 350px;
-          display: flex;
-          justify-content: start;  align-items:start;">
-                        <span>${message} &nbsp;&nbsp;<sub><small>${realTime}</small></sub></span>
-                        </div>
-  
-                `;
+                height: 350px;
+                display: flex;
+                justify-content: start;  align-items:start;">
+                              <span><a >${Name}</a><br/>${message} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
+                              </div>
+
+
+
+                      `;
           }
 
           messages.innerHTML += row;
           messages.scrollTop = messages.scrollHeight;
+          row = ``;
+
           messageBox.value = "";
+          messageBox.focus();
         }
 
         function init() {
@@ -144,7 +233,7 @@
             ws.close();
           }
 
-          ws = new WebSocket("ws://localhost:6969");
+          ws = new WebSocket("ws://192.168.1.5:6969");
           ws.onopen = () => {
             console.log("Connection opened!");
           };
@@ -152,10 +241,18 @@
             if (event.data instanceof Blob) {
               reader = new FileReader();
 
+              IsResver = true;
               reader.onload = () => {
                 console.log("Result: " + reader.result);
-                IsResver = true;
-                showMessage(reader.result, IsResver);
+
+                var MsgObj = {
+                  Message: messageBox.value,
+                  Time: GetRealTime(),
+                  Name: UserId,
+                };
+                arrMsg.push(MsgObj);
+                localStorage.setItem("Resver", JSON.stringify(arrMsg));
+                showMessage(reader.result, IsResver, MsgObj.Name);
               };
               reader.readAsText(event.data);
             } else {
@@ -166,19 +263,91 @@
             ws = null;
           };
         }
+        //#region  SendMsg
+        const body = document.getElementById("bdy");
+        body.addEventListener("keypress", (e) => {
+          if (e.key == "Enter") {
+            SendMsg();
+          }
+        });
 
-        sendBtn.onclick = function () {
+        sendBtn.onclick = () => {
+          SendMsg();
+        };
+        function SendMsg() {
           if (!ws) {
             showMessage("No WebSocket connection :(");
             return;
+            messageBox.focus();
           }
+          if (messageBox.value == "") {
+            alert("No Message to Send !");
+            return;
+          } else {
+            ws.send(messageBox.value);
 
-          ws.send(messageBox.value);
-          showMessage(messageBox.value);
-        };
+            var MsgObj = {
+              Message: messageBox.value,
+              Time: GetRealTime(),
+              Name: UserId,
+            };
+            arrMsg.push(MsgObj);
+            localStorage.setItem("Sender", JSON.stringify(arrMsg));
+            showMessage(messageBox.value, false, MsgObj.Name);
 
+            messageBox.focus();
+          }
+        }
+        //#endregion
         init();
       })();
+    </script>
+
+    <script>
+      var dataText = [];
+      const btns = document.querySelectorAll(".btns");
+      btns.forEach((element) => {
+        console.log(element.getAttribute("data-value"));
+        dataText.push(element.getAttribute("data-value"));
+      });
+      function typeWriter(text, i, fnCallback) {
+        // chekc if text isn't finished yet
+        if (i < text.length) {
+          // add next character to h1
+          btns.forEach((e) => {
+            e.innerHTML =
+              text.substring(0, i + 1) +
+              '<span aria-hidden="true" id="WelcomeText"></span>';
+          });
+
+          // wait for a while and call this function again for next character
+          setTimeout(function () {
+            typeWriter(text, i + 1, fnCallback);
+          }, 100);
+        }
+        // text finished, call callback if there is a callback function
+        else if (typeof fnCallback == "function") {
+          // call callback after timeout
+          setTimeout(fnCallback, 700);
+        }
+      }
+      function StartTextAnimation(i) {
+        if (typeof dataText[i] == "undefined") {
+          setTimeout(function () {
+            StartTextAnimation(0);
+          }, 2000);
+        }
+        // check if dataText[i] exists
+        if (i < dataText[i].length) {
+          // text exists! start typewriter animation
+          typeWriter(dataText[i], 0, function () {
+            // after callback (and whole text has been animated), start next text
+            StartTextAnimation(i + 1);
+          });
+        }
+      }
+      // start the text animation
+      StartTextAnimation(0);
     </script>
   </body>
 </html>

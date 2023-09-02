@@ -4,6 +4,57 @@
   font-family: Arial, Helvetica, sans-serif;
   box-sizing: border-box;
 }
+
+.btn {
+  background-color: rgb(90, 69, 69);
+  width: 65px;
+  border-radius: 50%;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+}
+.col .btns {
+  width: 100px;
+  animation: lights 3s 1s infinite alternate;
+}
+
+@keyframes lights {
+  0% {
+    transform: translateY(10px);
+    opacity: 0.2;
+  }
+  25% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+}
+#WelcomeText {
+  border-right: 0.05em solid;
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+#send {
+  cursor: pointer;
+}
 .nav {
   background-color: rgb(255, 255, 255);
   margin: 0;
@@ -165,6 +216,8 @@ span .msg {
   display: flex;
   justify-content: space-between;
   width: 100%;
+  align-items: center;
+  height: 50px;
 }
 .Message input {
   background-color: inherit;
