@@ -81,37 +81,17 @@
         </div>
       </div>
     </div>
-    <!-- <script>
-      function Show() {
-        document.getElementById("xx").style.display = "block";
-
-        document.getElementById("ma").remove();
-      }
-    </script> -->
 
     <script>
-      // function Show() {
-      //   document.getElementById("xx").style.display = "block";
-
-      //   document.getElementById("ma").remove();
-      // }
-
       (function () {
         const sendBtn = document.getElementById("send");
         const messages = document.getElementById("messages");
         const messageBox = document.querySelector("#messageBox");
-        const UserB = document.querySelector("center input");
+        const nameUser = document.querySelector("center input");
+        var UserB = "";
         const joinbtn = document.querySelector("center button");
         var cookies;
         var RandomNum = Math.floor(Math.random() * 999);
-        function setCookie(NameUser) {
-          const d = new Date();
-          d.setTime(d.getTime() + RandomNum * 24 * 60 * 60 * 1000);
-          let expires = "expires=" + d.toUTCString();
-          document.cookie = `UserName${RandomNum} = ${NameUser} ;`;
-
-          // NameUser + "=" + "cvalue" + ";" + expires + ";path=/";
-        }
 
         //Random Color
 
@@ -120,7 +100,7 @@
         document.getElementById("UserSessionId").value = `U-${RandomNum}`;
         var UserId = document.getElementById("UserSessionId").value;
         var arrMsg = [];
-
+        var MsgObj;
         var reader;
         var row = ``;
         let ws;
@@ -157,18 +137,13 @@
               Resver();
             }
           }
-          //Set Cookies
-          joinbtn.onclick = () => {
-            if (UserB.value == "") {
-              alert("Should Add Name");
-            } else {
-              setCookie(UserB.value);
+        };
 
-              console.log(cookies.split("=")[0]);
-
-              UserB.value = "";
-            }
-          };
+        //Set Cookies
+        joinbtn.onclick = () => {
+          UserB = nameUser.value;
+          console.log(UserB);
+          nameUser.value = "";
         };
 
         function Resver() {
@@ -178,13 +153,13 @@
           console.log(ResiverMsg.sort());
           for (let index = 0; index < ResiverMsg.length; index++) {
             row += `<div style=" width: 100%;
-                height: 350px;
-                display: flex;
-                justify-content: end;  align-items:end;">
-                              <span style="background-color:#${RandomNum} ;"><a >${ResiverMsg[index].Name}</a>${ResiverMsg[index].Message} &nbsp;&nbsp;<sub><small>${ResiverMsg[index].Time}</small></sub></span>
-                              </div>
+                      height: 350px;
+                      display: flex;
+                      justify-content: end;  align-items:end;">
+                                    <span style="background-color:#${RandomNum} ;"><a >${ResiverMsg[index].Name}</a>${ResiverMsg[index].Message} &nbsp;&nbsp;<sub><small>${ResiverMsg[index].Time}</small></sub></span>
+                                    </div>
 
-                      `;
+                            `;
           }
           messages.innerHTML += row;
           messages.scrollTop = messages.scrollHeight;
@@ -197,49 +172,51 @@
           console.log(SenderMsg);
           for (let index = 0; index < SenderMsg.length; index++) {
             row += `<div style=" width: 100%;
-                height: 350px;
-                display: flex;
-                justify-content: start;  align-items:start;">
-                              <span><a >${SenderMsg[index].Name}</a><br/>${SenderMsg[index].Message} &nbsp;&nbsp;<sub><small>${SenderMsg[index].Time}</small></sub></span>
-                              </div>
+                      height: 350px;
+                      display: flex;
+                      justify-content: start;  align-items:start;">
+                                    <span><a >${SenderMsg[index].Name}</a><br/>${SenderMsg[index].Message} &nbsp;&nbsp;<sub><small>${SenderMsg[index].Time}</small></sub></span>
+                                    </div>
 
 
 
-                      `;
+                            `;
           }
           messages.innerHTML += row;
           messages.scrollTop = messages.scrollHeight;
           row = ``;
         }
 
-        function showMessage(message, IsResver = false, Name = "Anonymus") {
+        function showMessage(message, IsResver = false) {
           if (IsResver) {
             console.log(message);
-            console.log(message.split(",")[0].split(":")[1]);
-            console.log(message.split(",")[1].split(":")[1].split("}")[0]);
             Msg = message.split(",")[0].split(":")[1];
             Name = message.split(",")[1].split(":")[1].split("}")[0];
             row = `<div style=" width: 100%;
-                height: 350px;
-                display: flex;
-                justify-content: end;  align-items:end;">
-                              <span style="background-color:#${RandomNum} ;"> <a >${Name}</a><br/> ${Msg} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
-                              </div>
+                      height: 350px;
+                      display: flex;
+                      justify-content: end;  align-items:end;">
+                                    <span style="background-color:#${RandomNum} ;"> <a >${Name}</a><br/> ${Msg} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
+                                    </div>
 
-                      `;
+                            `;
 
             IsResver = false;
           } else {
+            console.log(message);
+            Name = message[0].Name;
+            Msg = message[0].Message;
+
             row = `<div style=" width: 100%;
-                height: 350px;
-                display: flex;
-                justify-content: start;  align-items:start;">
-                              <span><a >${Name}</a><br/>${message} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
-                              </div>
+                      height: 350px;
+                      display: flex;
+                      justify-content: start;  align-items:start;">
+                                    <span><a >${Name}</a><br/>${Msg} &nbsp;&nbsp;<sub><small>${GetRealTime()}</small></sub></span>
+                                    </div>
 
 
 
-                      `;
+                            `;
           }
 
           messages.innerHTML += row;
@@ -256,21 +233,31 @@
             ws.close();
           }
 
+          //#region  Ws Connection to client
+
           ws = new WebSocket("ws://localhost:6969");
           ws.binaryType = "arraybuffer";
           ws.onopen = () => {
             console.log("Connection opened!");
           };
+
+          //#endregion
+
+          //  Send Msg To Client
           ws.addEventListener("message", (event) => {
-            var ss = event.data;
-            console.log(ss);
+            var data_Msg = event.data;
             IsResver = true;
-            showMessage(ss, true);
+
+            localStorage.setItem("Resver", JSON.stringify(arrMsg));
+            console.log(data_Msg);
+
+            showMessage(data_Msg, true);
           });
           ws.onclose = function () {
             ws = null;
           };
         }
+
         //#region  SendMsg
         const body = document.getElementById("bdy");
         body.addEventListener("keypress", (e) => {
@@ -292,26 +279,45 @@
             alert("No Message to Send !");
             return;
           } else {
-            var msg = `{ Message: ${messageBox.value}, Name: ${UserId} }`;
+            var msg;
+            if (UserB != "") {
+              console.log(UserB);
+              msg = `{ Message: ${messageBox.value}, Name: ${UserB} }`;
+            } else {
+              console.log(UserB);
+              msg = `{ Message: ${messageBox.value}, Name: ${UserId} }`;
+            }
 
             // ws.send(messageBox.value);
 
             ws.send(msg);
-
-            var MsgObj = {
-              Message: messageBox.value,
-              Time: GetRealTime(),
-              Name: UserId,
-            };
-
-            arrMsg.push(MsgObj);
+            CheckName();
             localStorage.setItem("Sender", JSON.stringify(arrMsg));
-            showMessage(messageBox.value, false, MsgObj.Name);
+            showMessage(arrMsg, false);
 
             messageBox.focus();
           }
         }
         //#endregion
+
+        function CheckName() {
+          if (UserB != "") {
+            console.log(UserB);
+            MsgObj = {
+              Message: messageBox.value,
+              Time: GetRealTime(),
+              Name: UserB,
+            };
+          } else {
+            console.log(UserB);
+            MsgObj = {
+              Message: messageBox.value,
+              Time: GetRealTime(),
+              Name: UserId,
+            };
+          }
+          arrMsg.push(MsgObj);
+        }
         init();
       })();
     </script>
